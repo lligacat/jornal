@@ -1,0 +1,13 @@
+{
+  "name": "Jornal",
+  "short_name": "Jornal",
+  "description": "Apunta les hores que treballes i comprova que la nòmina és la que toca.",
+  "lang": "ca",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#f5f3ee",
+  "theme_color": "#1d2545",
+  "icons": [
+    { "src": "icona.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

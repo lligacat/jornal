@@ -1,0 +1,362 @@
+<!doctype html>
+<html lang="ca">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Jornal</title>
+  <meta name="theme-color" content="#1d2545">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icona.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="estils.css">
+</head>
+<body>
+  <header class="cap">
+    <div class="marca"><img src="icona.svg" alt="" width="28" height="28"><span>Jornal</span></div>
+    <div class="periode">
+      <button id="mes-ant" class="rodo" aria-label="Anterior">‹</button>
+      <h1 id="titol-mes"></h1>
+      <button id="mes-seg" class="rodo" aria-label="Següent">›</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- INICI -->
+    <section data-vista="mes">
+      <div class="heroi" id="heroi"></div>
+      <div class="fitxar" id="fitxar"></div>
+      <div id="desglos"></div>
+      <div class="targeta calendari">
+        <div class="cap-setmana"><span>dl</span><span>dt</span><span>dc</span><span>dj</span><span>dv</span><span>ds</span><span>dg</span></div>
+        <div class="graella" id="graella"></div>
+      </div>
+      <div class="llegenda">
+        <span><i class="p feina"></i>Feina</span>
+        <span><i class="p extra"></i>Amb extres</span>
+        <span><i class="p festiu"></i>Festiu</span>
+        <span><i class="p vacances"></i>Vacances</span>
+        <span><i class="p baixa"></i>Baixa / permís</span>
+        <span><i class="p absencia"></i>Absència</span>
+      </div>
+      <button id="omple-mes" class="secundari ample">Omple els dies laborables buits amb l'horari habitual</button>
+      <p class="nota">Toca un dia per apuntar-hi les hores, o per marcar-lo com a vacances, baixa o festiu.</p>
+    </section>
+
+    <!-- RESUMS -->
+    <section data-vista="resums" hidden>
+      <div class="segments" id="resums-escala">
+        <button type="button" data-escala="setmanes">Setmanes</button>
+        <button type="button" data-escala="mesos">Mesos</button>
+        <button type="button" data-escala="anys">Anys</button>
+      </div>
+      <div id="resums-cos"></div>
+    </section>
+
+    <!-- RESUM -->
+    <section data-vista="resum" hidden>
+      <div id="resum-cos"></div>
+    </section>
+
+    <!-- VACANCES -->
+    <section data-vista="vacances" hidden>
+      <div id="vacances-cos"></div>
+    </section>
+
+    <!-- AJUSTOS -->
+    <section data-vista="ajustos" hidden>
+      <form id="ajustos" autocomplete="off">
+        <fieldset>
+          <legend>Com cobres</legend>
+          <label>Tipus de sou
+            <select data-cfg="mode">
+              <option value="mensual">Sou fix mensual + extres a part</option>
+              <option value="hores">Per hores treballades</option>
+            </select>
+          </label>
+          <label data-nomes="mensual">Sou base brut mensual (€)
+            <input type="number" step="0.01" min="0" data-cfg="souBase">
+          </label>
+          <label data-nomes="mensual">Pagues extres
+            <select data-cfg="pagues">
+              <option value="12">No en tinc</option>
+              <option value="14p">Prorratejades: en cobro una part cada mes</option>
+              <option value="14">Dobles: les cobro senceres uns mesos concrets</option>
+            </select>
+          </label>
+          <div data-nomes="mensual" data-amb-pagues>
+            <p class="nota">Mesos de paga extra. Si van prorratejades, només serveix per saber quantes en tens.</p>
+            <div class="mesos-paga" id="cfg-mesos-paga"></div>
+            <label>Import de cada paga extra (€)
+              <input type="number" step="0.01" min="0" placeholder="igual que el sou base" data-cfg="pagaImport" data-buit>
+            </label>
+          </div>
+          <label>Preu hora normal (€)
+            <input type="number" step="0.01" min="0" data-cfg="preuHora">
+          </label>
+          <label>Preu hora extra (€)
+            <input type="number" step="0.01" min="0" data-cfg="preuExtra">
+          </label>
+          <label>Preu hora en cap de setmana (€)
+            <input type="number" step="0.01" min="0" data-cfg="preuFestiu">
+          </label>
+          <label>Preu hora en festiu oficial (€)
+            <input type="number" step="0.01" min="0" placeholder="igual que el cap de setmana" data-cfg="preuFestiuOficial" data-buit>
+          </label>
+          <label>Plus per hora de nit (€ de més sobre el preu que toqui)
+            <input type="number" step="0.01" min="0" data-cfg="plusNocturn">
+          </label>
+          <div class="fila">
+            <label>La nit comença<input type="time" data-cfg="nitInici"></label>
+            <label>i acaba<input type="time" data-cfg="nitFi"></label>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Quan cobres i què hi entra</legend>
+          <div class="fila">
+            <label>Dia que cobres<input type="number" step="1" min="0" max="31" data-cfg="diaCobrament"></label>
+            <label>De quin mes
+              <select data-cfg="cobramentMes">
+                <option value="mateix">del mateix mes</option>
+                <option value="seguent">del mes següent</option>
+              </select>
+            </label>
+          </div>
+          <label>Últim dia que entra a la nòmina del mes
+            <input type="number" step="1" min="0" max="31" data-cfg="tallDia">
+          </label>
+          <p class="nota">Si l'empresa tanca les hores abans de final de mes, posa aquí el dia de tall. Amb un 20, la nòmina d'octubre compta les hores extres, festius i plusos del 21 de setembre al 20 d'octubre. Deixa un 0 si es compta el mes sencer, de l'1 a l'últim dia.</p>
+        </fieldset>
+
+        <fieldset>
+          <legend>Jornada</legend>
+          <p class="nota">Hores previstes cada dia. El que passi d'aquí compta com a hora extra.</p>
+          <div class="setmana" id="cfg-jornada"></div>
+          <p class="nota">Dies que es paguen a preu de festiu:</p>
+          <div class="setmana" id="cfg-festius"></div>
+          <p class="nota">Recàrrec per dia (% de més sobre el preu de l'hora). Si els dissabtes cobres l'hora un 50 % més cara, posa 50 a ds.</p>
+          <div class="setmana" id="cfg-recarrec"></div>
+          <p class="nota">El recàrrec s'aplica sobre el preu que toqui aquell dia. Si en poses a un dia que també està marcat a preu de festiu, se sumen les dues coses: desmarca'l a dalt si no és el cas.</p>
+          <label>Si un dia fas menys hores de les previstes
+            <select data-cfg="compensa">
+              <option value="mes">es resten de les hores extres del mateix mes</option>
+              <option value="setmana">es resten de les hores extres de la mateixa setmana</option>
+              <option value="dia">no es resten: cada dia compta per separat</option>
+            </select>
+          </label>
+          <div class="fila">
+            <label>Entrada habitual<input type="time" data-cfg="habInici"></label>
+            <label>Sortida habitual<input type="time" data-cfg="habFi"></label>
+          </div>
+          <label>Pausa no retribuïda habitual (minuts)
+            <input type="number" step="5" min="0" data-cfg="habPausa">
+          </label>
+        </fieldset>
+
+        <fieldset>
+          <legend>Canvis de preu per temporada</legend>
+          <p class="nota">Per quan et pugen o et canvien el preu de l'hora durant un temps. Omple només els preus que canvien; els que deixis en blanc queden igual. Sense data de final, el canvi dura fins que n'hi posis un altre.</p>
+          <div id="cfg-tarifes"></div>
+          <button type="button" class="secundari" data-afegeix="tarifes">+ Afegeix un canvi de preu</button>
+        </fieldset>
+
+        <fieldset>
+          <legend>Plusos fixos cada mes</legend>
+          <p class="nota">Antiguitat, transport, plus de conveni… Marca "sense descomptes" als que cobres sencers, com dietes o quilometratge.</p>
+          <div id="cfg-plusos-fixos"></div>
+          <button type="button" class="secundari" data-afegeix="plusosFixos">+ Afegeix plus mensual</button>
+        </fieldset>
+
+        <fieldset>
+          <legend>Plusos per dia</legend>
+          <p class="nota">Dietes, guàrdia, quilometratge, torn… amb un import que sempre és el mateix. Els marques el dia que toquen. Si l'import canvia cada vegada, l'apuntes directament al dia.</p>
+          <div id="cfg-plusos-dia"></div>
+          <button type="button" class="secundari" data-afegeix="plusosDia">+ Afegeix plus per dia</button>
+        </fieldset>
+
+        <fieldset>
+          <legend>Descomptes de la nòmina</legend>
+          <label>Retenció d'IRPF (%)
+            <input type="number" step="0.01" min="0" max="60" data-cfg="irpf">
+          </label>
+          <label>Seguretat Social del treballador (%)
+            <input type="number" step="0.01" min="0" max="20" data-cfg="ss">
+          </label>
+          <p class="nota">Tots dos percentatges surten a la teva nòmina. Copia'ls d'allà perquè el net quadri.</p>
+        </fieldset>
+
+        <fieldset>
+          <legend>Transport per anar a treballar</legend>
+          <p class="nota">Serveix per saber quant et costa anar a la feina. Deixa a 0 el que no facis servir.</p>
+          <label>Quilòmetres de casa a la feina (només anada)
+            <input type="number" step="0.1" min="0" data-cfg="transKm">
+          </label>
+          <div class="fila">
+            <label>Consum (l/100 km)<input type="number" step="0.1" min="0" data-cfg="transConsum"></label>
+            <label>Combustible (€/l)<input type="number" step="0.001" min="0" data-cfg="transPreu"></label>
+          </div>
+          <label>Peatges, aparcament o bitllets per dia (€)
+            <input type="number" step="0.01" min="0" data-cfg="transDia">
+          </label>
+          <label>Abonament o despesa fixa mensual (€)
+            <input type="number" step="0.01" min="0" data-cfg="transAbonament">
+          </label>
+        </fieldset>
+
+        <fieldset>
+          <legend>Vacances i límits</legend>
+          <label>Inici del contracte
+            <input type="date" data-cfg="dataInici">
+          </label>
+          <div class="fila">
+            <label>Dies de vacances l'any<input type="number" step="1" min="0" data-cfg="vacDies"></label>
+            <label>Comptats en
+              <select data-cfg="vacTipus">
+                <option value="naturals">dies naturals</option>
+                <option value="laborables">dies laborables</option>
+              </select>
+            </label>
+          </div>
+          <label>Màxim d'hores extres l'any
+            <input type="number" step="1" min="0" data-cfg="maxExtres">
+          </label>
+        </fieldset>
+
+        <fieldset>
+          <legend>Les teves dades</legend>
+          <p class="nota">Tot es guarda només en aquest dispositiu. Fes una còpia de tant en tant.</p>
+          <div class="fila">
+            <button type="button" class="secundari" id="exporta">Desa una còpia</button>
+            <button type="button" class="secundari" id="importa">Recupera una còpia</button>
+          </div>
+          <input type="file" id="fitxer" accept="application/json,.json" hidden>
+          <button type="button" class="secundari ample" id="refes-questionari">Puja una nòmina o torna a fer el qüestionari</button>
+        </fieldset>
+      </form>
+    </section>
+  </main>
+
+  <nav class="pestanyes">
+    <button data-va="mes" class="activa"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Inici</button>
+    <button data-va="resums"><svg viewBox="0 0 24 24"><path d="M5 20V10M12 20V4M19 20v-7"/></svg>Resums</button>
+    <button data-va="resum"><svg viewBox="0 0 24 24"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/></svg>Nòmina</button>
+    <button data-va="vacances"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>Vacances</button>
+    <button data-va="ajustos"><svg viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg>Ajustos</button>
+  </nav>
+
+  <dialog id="dlg-dia">
+    <form method="dialog" id="form-dia">
+      <h2 id="dlg-titol"></h2>
+      <div class="xips" id="dia-tipus">
+        <button type="button" data-tipus="feina">Feina</button>
+        <button type="button" data-tipus="vacances">Vacances</button>
+        <button type="button" data-tipus="baixa">Baixa</button>
+        <button type="button" data-tipus="permis">Permís pagat</button>
+        <button type="button" data-tipus="absencia">Absència sense sou</button>
+      </div>
+      <div id="dia-feina">
+        <div class="segments" id="dia-mode">
+          <button type="button" data-mode="total">Total d'hores</button>
+          <button type="button" data-mode="horari">Entrada i sortida</button>
+        </div>
+        <div id="dia-bloc-total">
+          <div class="comptador">
+            <button type="button" data-pas="-0.5" aria-label="Mitja hora menys">−</button>
+            <label><input type="number" id="dia-hores" min="0" max="24" step="0.25" inputmode="decimal" aria-label="Hores treballades"><span>hores</span></label>
+            <button type="button" data-pas="0.5" aria-label="Mitja hora més">+</button>
+          </div>
+          <div class="xips rapides" id="dia-rapides">
+            <button type="button" data-hores="4">4 h</button>
+            <button type="button" data-hores="6">6 h</button>
+            <button type="button" data-hores="8">8 h</button>
+            <button type="button" data-hores="10">10 h</button>
+            <button type="button" data-hores="12">12 h</button>
+          </div>
+          <label id="dia-bloc-nit">D'aquestes, quantes de nit?
+            <input type="number" id="dia-nit" min="0" max="24" step="0.25" inputmode="decimal">
+          </label>
+        </div>
+        <div id="dia-bloc-horari">
+          <div id="dia-trams"></div>
+          <button type="button" class="secundari" id="dia-afegeix-tram">+ Afegeix un altre tram</button>
+          <label>Pausa no retribuïda (minuts)
+            <input type="number" id="dia-pausa" min="0" step="5">
+          </label>
+        </div>
+        <label class="check"><input type="checkbox" id="dia-festiu"> És festiu oficial</label>
+        <div id="dia-plusos"></div>
+        <div id="dia-altres"></div>
+        <button type="button" class="secundari" id="dia-afegeix-altre">+ Afegeix una dieta o un altre import</button>
+        <p class="previsio" id="dia-previsio"></p>
+      </div>
+      <label>Nota
+        <input type="text" id="dia-nota" maxlength="120">
+      </label>
+      <div class="accions">
+        <button type="button" class="perill" id="dia-esborra">Esborra</button>
+        <button type="button" class="secundari" id="dia-cancela">Cancel·la</button>
+        <button type="submit" class="principal">Desa</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="dlg-benvinguda">
+    <form method="dialog" id="form-benvinguda" autocomplete="off">
+      <h2>Benvingut a Jornal</h2>
+      <div class="puja">
+        <button type="button" class="principal" id="q-puja">Puja la teva última nòmina (PDF)</button>
+        <input type="file" id="q-fitxer" accept="application/pdf,.pdf" hidden>
+        <p class="nota" id="q-estat"></p>
+        <div id="q-trobat"></div>
+      </div>
+      <p class="nota">Amb això l'app pot calcular el teu brut i el teu net. Ho trobaràs gairebé tot a la nòmina o al contracte, i ho pots canviar després a Ajustos.</p>
+      <label>Com cobres?
+        <select id="q-mode">
+          <option value="mensual">Un sou fix cada mes</option>
+          <option value="hores">Per hores treballades</option>
+        </select>
+      </label>
+      <div id="q-bloc-mensual">
+        <label>Sou base brut mensual (€)
+          <input type="number" id="q-sou" step="0.01" min="0" inputmode="decimal">
+        </label>
+        <label>Pagues extres
+          <select id="q-pagues">
+            <option value="12">No en tinc</option>
+            <option value="14p">Prorratejades: en cobro una part cada mes</option>
+            <option value="14">Dobles: les cobro senceres (juny i desembre)</option>
+          </select>
+        </label>
+      </div>
+      <label id="q-bloc-hores">Preu de l'hora normal (€)
+        <input type="number" id="q-preuhora" step="0.01" min="0" inputmode="decimal">
+      </label>
+      <label>Hores de feina per setmana
+        <input type="number" id="q-hores" step="0.5" min="1" max="60" value="40" inputmode="decimal">
+      </label>
+      <div class="fila">
+        <label>Preu hora extra (€)<input type="number" id="q-extra" step="0.01" min="0" placeholder="com la normal" inputmode="decimal"></label>
+        <label>Preu hora en festiu (€)<input type="number" id="q-festiu" step="0.01" min="0" placeholder="com l'extra" inputmode="decimal"></label>
+      </div>
+      <label>Plus per cada hora de nit (€ de més; 0 si no en fas)
+        <input type="number" id="q-nit" step="0.01" min="0" value="0" inputmode="decimal">
+      </label>
+      <label>Retenció d'IRPF de la teva nòmina (%)
+        <input type="number" id="q-irpf" step="0.01" min="0" max="60" value="12" inputmode="decimal">
+      </label>
+      <label>Quan vas començar a l'empresa?
+        <input type="date" id="q-inici">
+      </label>
+      <div class="fila">
+        <label>Km fins a la feina (anada)<input type="number" id="q-km" step="0.1" min="0" value="0" inputmode="decimal"></label>
+        <label>Abonament de transport al mes (€)<input type="number" id="q-abonament" step="0.01" min="0" value="0" inputmode="decimal"></label>
+      </div>
+      <div class="accions">
+        <button type="button" class="secundari" id="q-salta">Ara no</button>
+        <button type="submit" class="principal">Comença</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="app.js"></script>
+</body>
+</html>
