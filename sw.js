@@ -1,5 +1,5 @@
 // Xarxa primer, memòria cau com a recanvi: l'app s'obre sense cobertura després de la primera visita.
-const CAU = 'jornal-v6';
+const CAU = 'jornal-v7';
 
 self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', e => e.waitUntil(self.clients.claim()));

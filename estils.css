@@ -154,6 +154,7 @@ button { cursor: pointer; border: 0; border-radius: 12px; padding: 11px 16px; }
 .comptador input::-webkit-inner-spin-button { display: none; }
 
 .fila-resum { display: block; width: 100%; text-align: left; background: var(--paper); border: 1px solid var(--vora); border-radius: 16px; padding: 12px 14px; margin-bottom: 8px; box-shadow: var(--ombra); }
+.fila-resum.triada { border-color: var(--accent); border-width: 2px; }
 .fila-resum.buida { opacity: .5; box-shadow: none; padding-block: 8px; }
 .fila-resum.buida .barra, .fila-resum.buida .fr-peu { display: none; }
 .fila-resum > div:not(.barra) { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }

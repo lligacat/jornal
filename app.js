@@ -655,6 +655,7 @@ function obreQuestionari() {
   $('#q-trobat').innerHTML = '';
   $('#q-estat').textContent = "L'app la llegeix en aquest mateix dispositiu i omple les dades per tu: la nòmina no s'envia enlloc. Si t'ho estimes més, omple-ho tot a mà aquí sota.";
   $('#q-mode').value = c.mode;
+  $('#q-compensa').value = c.compensa;
   $('#q-pagues').value = c.pagues;
   $('#q-inici').value = c.dataInici;
   if (estat.benvinguda) {
@@ -866,6 +867,7 @@ function desaQuestionari() {
   c.irpf = num($('#q-irpf').value);
   c.plusNocturn = num($('#q-nit').value);
   c.dataInici = $('#q-inici').value;
+  c.compensa = $('#q-compensa').value;
   c.tallDia = Math.min(31, Math.max(0, Math.round(num($('#q-tall').value))));
   c.transKm = num($('#q-km').value);
   c.transAbonament = num($('#q-abonament').value);
@@ -1035,6 +1037,7 @@ function pintaResum() {
     </div>
     <div id="comparacio"></div>
     ${detallDies(any, mes)}
+    ${comparaComputs(any, mes)}
     <h2>Cost d'anar a treballar</h2>
     ${r.transport ? `
     <div class="targetes">
@@ -1069,6 +1072,33 @@ function detallDies(any, mes) {
   return `<details class="detall"><summary>Veure dia per dia com s'han comptat les hores</summary>
     <table class="nomina"><thead><tr><th>Dia</th><th>Hores</th><th>Com compta</th></tr></thead><tbody>${files.join('')}</tbody></table>
     <p class="nota">La jornada de cada dia es canvia a Ajustos → Jornada. Tot el que passa de la jornada és hora extra.</p></details>`;
+}
+
+// Les tres maneres de comptar les hores extres, amb el que donaria cadascuna aquest mes,
+// perquè es pugui triar la que coincideix amb el que paga l'empresa.
+const COMPUTS = [
+  ['dia', 'Cada dia per separat', 'Tot el que passa de la jornada d\'un dia és extra, encara que un altre dia en facis menys.'],
+  ['setmana', 'Per setmanes', 'Les hores que et falten un dia es resten de les extres de la mateixa setmana.'],
+  ['mes', 'Per mesos', 'Les hores que et falten un dia es resten de les extres del mateix període de nòmina.'],
+];
+
+function comparaComputs(any, mes) {
+  const c = estat.config, triat = c.compensa;
+  const files = COMPUTS.map(([mode, nom, text]) => {
+    c.compensa = mode;
+    cau.clear();
+    const r = calculaMes(any, mes);
+    return { mode, nom, text, h: r.extres, importe: r.parts.extres };
+  });
+  c.compensa = triat;
+  cau.clear();
+  return `<h2>Com et compten les hores extres</h2>
+    <p class="nota">Depèn del conveni i de l'empresa. Si no ho saps, agafa una nòmina passada, mira quantes hores extres et van pagar i tria l'opció que hi coincideix.</p>
+    ${files.map(f => `
+      <button class="fila-resum opcio${f.mode === triat ? ' triada' : ''}" data-compensa="${f.mode}">
+        <div class="fr-cap"><b>${f.nom}${f.mode === triat ? ' · triada' : ''}</b><span>${hores(f.h)} · ${euros(f.importe)}</span></div>
+        <div class="fr-peu"><span>${f.text}</span></div>
+      </button>`).join('')}`;
 }
 
 function pintaComparacio() {
@@ -1344,7 +1374,11 @@ $('#resum-cos').addEventListener('input', e => {
   desa();
   pintaComparacio();
 });
-$('#resum-cos').addEventListener('click', e => { if (e.target.id === 'csv') exportaCSV(); });
+$('#resum-cos').addEventListener('click', e => {
+  const opcio = e.target.closest('[data-compensa]');
+  if (e.target.id === 'csv') exportaCSV();
+  else if (opcio) { estat.config.compensa = opcio.dataset.compensa; desa(); pinta(); }
+});
 
 if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js');
 pinta();

@@ -336,7 +336,14 @@
         <label>Hores de jornada al dia<input type="number" id="q-jornada" step="0.25" min="1" max="24" value="8" inputmode="decimal"></label>
         <label>Dies de feina per setmana<input type="number" id="q-dies" step="1" min="1" max="7" value="5" inputmode="numeric"></label>
       </div>
-      <p class="nota">Tot el que facis per sobre de la jornada d'un dia compta com a hora extra.</p>
+      <label>Si un dia fas menys hores de la jornada, et resten hores extres?
+        <select id="q-compensa">
+          <option value="mes">Sí, es compensa dins del mes (si no ho saps, deixa aquesta)</option>
+          <option value="setmana">Sí, però només dins de la mateixa setmana</option>
+          <option value="dia">No: cada dia es compta per separat</option>
+        </select>
+      </label>
+      <p class="nota">El que facis per sobre de la jornada són hores extres. Després, a Nòmina, podràs comparar les tres maneres de comptar-les amb el que et paguen de veritat.</p>
       <div class="fila">
         <label>Preu hora extra (€)<input type="number" id="q-extra" step="0.01" min="0" placeholder="com la normal" inputmode="decimal"></label>
         <label>Preu hora en festiu (€)<input type="number" id="q-festiu" step="0.01" min="0" placeholder="com l'extra" inputmode="decimal"></label>
