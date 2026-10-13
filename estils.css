@@ -84,6 +84,7 @@ button { cursor: pointer; border: 0; border-radius: 12px; padding: 11px 16px; }
 }
 .heroi .etiqueta { font-size: .82rem; opacity: .8; }
 .heroi .xifra { display: block; font-size: 2.3rem; font-weight: 800; letter-spacing: -.03em; line-height: 1.15; }
+.heroi .xifra.petita { font-size: 1.35rem; margin: 4px 0; }
 .heroi .sota { font-size: .88rem; opacity: .85; }
 .heroi .generat { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; margin-top: 14px; padding: 10px 12px; border-radius: 14px; background: rgba(255, 255, 255, .12); }
 .heroi .generat span { flex-basis: 100%; font-size: .8rem; opacity: .8; }
@@ -154,6 +155,8 @@ button { cursor: pointer; border: 0; border-radius: 12px; padding: 11px 16px; }
 .fila-resum .fr-peu { font-size: .82rem; color: var(--suau); }
 .fila-resum .fr-peu b { color: var(--text); }
 
+.pista { margin: 0 0 10px; text-align: center; }
+#avis-desat { background: var(--festiu); }
 .nota { color: var(--suau); font-size: .85rem; margin: 10px 0; }
 .avis { background: var(--extra); border-radius: 12px; padding: 10px 12px; font-size: .9rem; }
 .be { color: var(--be); font-weight: 600; }
@@ -224,5 +227,6 @@ dialog {
 dialog::backdrop { background: rgba(10, 12, 24, .55); }
 dialog h2 { margin: 0 0 4px; font-size: 1.2rem; }
 dialog h2::first-letter { text-transform: uppercase; }
-.accions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px; }
+/* Els botons del diàleg queden sempre a la vista, encara que el formulari sigui llarg. */
+.accions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px; position: sticky; bottom: -20px; background: var(--paper); padding: 12px 0 20px; margin-bottom: -20px; border-top: 1px solid var(--vora); }
 .accions .principal { min-width: 110px; }

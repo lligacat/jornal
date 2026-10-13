@@ -20,12 +20,13 @@
   </header>
 
   <main>
+    <p class="avis" id="avis-desat" hidden>Aquest navegador no està guardant les dades, segurament perquè és una finestra privada o d'incògnit. Obre l'app amb el navegador normal perquè no es perdi el que apuntis.</p>
     <!-- INICI -->
     <section data-vista="mes">
       <div class="heroi" id="heroi"></div>
       <div class="fitxar" id="fitxar"></div>
-      <div id="desglos"></div>
       <div class="targeta calendari">
+        <p class="nota pista">Toca qualsevol dia, també els que ja han passat, per apuntar-hi les hores.</p>
         <div class="cap-setmana"><span>dl</span><span>dt</span><span>dc</span><span>dj</span><span>dv</span><span>ds</span><span>dg</span></div>
         <div class="graella" id="graella"></div>
       </div>
@@ -37,8 +38,9 @@
         <span><i class="p baixa"></i>Baixa / permís</span>
         <span><i class="p absencia"></i>Absència</span>
       </div>
-      <button id="omple-mes" class="secundari ample">Omple els dies laborables buits amb l'horari habitual</button>
-      <p class="nota">Toca un dia per apuntar-hi les hores, o per marcar-lo com a vacances, baixa o festiu.</p>
+      <button id="omple-mes" class="secundari ample">Omple d'un cop tots els dies de feina buits fins avui</button>
+      <p class="nota">Després pots tocar cada dia per corregir-lo o marcar-lo com a vacances, baixa o festiu.</p>
+      <div id="desglos"></div>
     </section>
 
     <!-- RESUMS -->
@@ -244,7 +246,7 @@
   </nav>
 
   <dialog id="dlg-dia">
-    <form method="dialog" id="form-dia">
+    <form method="dialog" id="form-dia" novalidate>
       <h2 id="dlg-titol"></h2>
       <div class="xips" id="dia-tipus">
         <button type="button" data-tipus="feina">Feina</button>
@@ -300,7 +302,7 @@
   </dialog>
 
   <dialog id="dlg-benvinguda">
-    <form method="dialog" id="form-benvinguda" autocomplete="off">
+    <form method="dialog" id="form-benvinguda" autocomplete="off" novalidate>
       <h2>Benvingut a Jornal</h2>
       <div class="puja">
         <button type="button" class="principal" id="q-puja">Puja la teva última nòmina (PDF)</button>

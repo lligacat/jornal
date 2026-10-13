@@ -10,16 +10,16 @@ const ORDRE_SETMANA = [1, 2, 3, 4, 5, 6, 0]; // comencem en dilluns
 // 30 dies naturals de vacances, 80 h extres/any, nit de 22 a 6). El conveni els pot millorar.
 const PER_DEFECTE = {
   mode: 'mensual',
-  souBase: 1500,
+  souBase: 0,
   pagues: '12',           // '12' sense pagues extres, '14p' prorratejades cada mes, '14' dobles en uns mesos concrets
   mesosPaga: [5, 11],     // mesos de paga extra (0 = gener): juny i desembre
   pagaImport: '',         // import de cada paga extra; en blanc = igual que el sou base
   diaCobrament: 0,        // 0 = no indicat
   cobramentMes: 'mateix', // 'mateix' mes de la nòmina o el 'seguent'
   tallDia: 0,             // últim dia que entra a la nòmina del mes; 0 = mes natural sencer
-  preuHora: 10,
-  preuExtra: 12.5,
-  preuFestiu: 15,
+  preuHora: 0,
+  preuExtra: 0,
+  preuFestiu: 0,
   preuFestiuOficial: '', // en blanc = igual que el cap de setmana
   plusNocturn: 0,
   nitInici: '22:00',
@@ -53,6 +53,7 @@ let avui = new Date(); // es refresca a cada repintat, per si l'app queda oberta
 let vist = { any: avui.getFullYear(), mes: avui.getMonth() };
 let vista = 'mes';
 let escala = 'mesos';
+let persistenciaDemanada = false;
 const cau = new Map(); // dies ja calculats; es buida cada cop que es desa o es repinta
 let diaEditat = null;
 let esborrany = null;
@@ -62,21 +63,32 @@ const $$ = s => [...document.querySelectorAll(s)];
 
 // ---------- Utilitats ----------
 
+// Còpia independent d'un objecte de dades (funciona també en navegadors de mòbil antics).
+function copia(o) { return JSON.parse(JSON.stringify(o)); }
+
 function carrega() {
   let desat = {};
   try { desat = JSON.parse(localStorage.getItem(CLAU)) || {}; } catch { /* dades il·legibles: comencem de zero */ }
   return {
-    config: { ...structuredClone(PER_DEFECTE), ...desat.config },
+    config: { ...copia(PER_DEFECTE), ...desat.config },
     dies: desat.dies || {},
     nomines: desat.nomines || {},
     fitxatge: desat.fitxatge || null,
-    benvinguda: !!desat.benvinguda,
+    benvinguda: !!desat.benvinguda, // el qüestionari s'ha omplert o descartat
+    popupVist: !!desat.popupVist,   // el qüestionari ja ha sortit sol una vegada
   };
 }
 
 function desa() {
   cau.clear();
-  localStorage.setItem(CLAU, JSON.stringify(estat));
+  try {
+    localStorage.setItem(CLAU, JSON.stringify(estat));
+    $('#avis-desat').hidden = true;
+  } catch {
+    $('#avis-desat').hidden = false; // finestra privada o sense espai: s'avisa en lloc de perdre-ho en silenci
+  }
+  // Es demana al navegador que no esborri les dades per fer lloc.
+  if (!persistenciaDemanada && navigator.storage?.persist) { persistenciaDemanada = true; navigator.storage.persist().catch(() => {}); }
 }
 
 // «de gener», però «d'abril», «d'agost» i «d'octubre».
@@ -436,6 +448,17 @@ function pintaMes() {
   const c = estat.config;
   const r = calculaMes(any, mes);
   pintaFitxar();
+  // Sense sou posat no es mostra cap xifra: es convida a configurar-lo.
+  if (!(c.mode === 'mensual' ? c.souBase > 0 : c.preuHora > 0)) {
+    $('#heroi').innerHTML = `
+      <span class="etiqueta">Encara no has posat el teu sou</span>
+      <b class="xifra petita">Configura'l per veure què cobraràs</b>
+      <span class="sota">Mentrestant ja pots anar apuntant les hores al calendari.</span>
+      <div class="peu"><span>${hores(r.treballades)} treballades ${deMes(mes)}</span><button data-questionari>Posa el meu sou ›</button></div>`;
+    $('#desglos').innerHTML = '';
+    pintaCalendari();
+    return;
+  }
   const generat = generatFinsAvui(any, mes);
   const cobra = dataCobrament(any, mes);
   const falten = cobra && Math.round((cobra - new Date(avui.getFullYear(), avui.getMonth(), avui.getDate())) / 86400000);
@@ -455,7 +478,12 @@ function pintaMes() {
       ${cobra ? `<span>${falten > 0 ? `Cobres el ${diaCurt(clauDia(cobra.getFullYear(), cobra.getMonth(), cobra.getDate()))} · ${falten === 1 ? 'falta 1 dia' : `falten ${falten} dies`}` : falten === 0 ? 'Avui cobres' : `Cobrat el ${diaCurt(clauDia(cobra.getFullYear(), cobra.getMonth(), cobra.getDate()))}`}</span>` : ''}
     </div>` : ''}`;
   pintaDesglos(r);
+  pintaCalendari();
+}
 
+function pintaCalendari() {
+  const { any, mes } = vist;
+  const c = estat.config;
   const buits = ORDRE_SETMANA.indexOf(new Date(any, mes, 1).getDay());
   let html = '<span></span>'.repeat(buits);
   for (let d = 1; d <= diesDelMes(any, mes); d++) {
@@ -824,7 +852,7 @@ function diaNou(clau) {
 
 function obreDia(clau) {
   diaEditat = clau;
-  esborrany = structuredClone(estat.dies[clau] || diaNou(clau));
+  esborrany = copia(estat.dies[clau] || diaNou(clau));
   esborrany.mode ||= 'horari'; // dies apuntats abans que existís el total d'hores
   esborrany.trams ||= [];
   esborrany.plusos ||= [];
@@ -1202,6 +1230,7 @@ function mouMes(pas) {
 $('#mes-ant').onclick = () => mouMes(-1);
 $('#mes-seg').onclick = () => mouMes(1);
 document.addEventListener('click', e => {
+  if (e.target.closest('[data-questionari]')) { obreQuestionari(); return; }
   const b = e.target.closest('[data-va]');
   if (b) { vista = b.dataset.va; pinta(); scrollTo(0, 0); }
 });
@@ -1215,7 +1244,11 @@ $('#q-mode').onchange = ajustaQuestionari;
 $('#q-puja').onclick = () => $('#q-fitxer').click();
 $('#q-fitxer').onchange = e => { if (e.target.files[0]) pujaNomina(e.target.files[0]); e.target.value = ''; };
 $('#form-benvinguda').addEventListener('submit', desaQuestionari);
-$('#q-salta').onclick = () => { estat.benvinguda = true; desa(); $('#dlg-benvinguda').close(); };
+$('#q-salta').onclick = () => { estat.benvinguda = true; desa(); $('#dlg-benvinguda').close(); pinta(); };
+// Es tanqui com es tanqui el qüestionari (botó, tecla enrere del mòbil…), no torna a sortir sol.
+$('#dlg-benvinguda').addEventListener('close', () => {
+  if (!estat.benvinguda) { estat.benvinguda = true; desa(); pinta(); }
+});
 $('#refes-questionari').onclick = obreQuestionari;
 
 $('#form-dia').addEventListener('input', llegeixDialeg);
@@ -1256,4 +1289,11 @@ $('#resum-cos').addEventListener('click', e => { if (e.target.id === 'csv') expo
 
 if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js');
 pinta();
-if (!estat.benvinguda) obreQuestionari();
+try { localStorage.setItem('jornal-prova', '1'); localStorage.removeItem('jornal-prova'); } catch { $('#avis-desat').hidden = false; }
+// El qüestionari només surt sol la primera vegada. Es deixa apuntat abans d'obrir-lo, perquè no torni
+// a aparèixer encara que es tanqui d'una manera que el navegador no avisi (tecla enrere, tancar l'app…).
+if (!estat.benvinguda && !estat.popupVist) {
+  estat.popupVist = true;
+  desa();
+  obreQuestionari();
+}
