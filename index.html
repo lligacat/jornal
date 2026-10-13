@@ -332,9 +332,11 @@
       <label id="q-bloc-hores">Preu de l'hora normal (€)
         <input type="number" id="q-preuhora" step="0.01" min="0" inputmode="decimal">
       </label>
-      <label>Hores de feina per setmana
-        <input type="number" id="q-hores" step="0.5" min="1" max="60" value="40" inputmode="decimal">
-      </label>
+      <div class="fila">
+        <label>Hores de jornada al dia<input type="number" id="q-jornada" step="0.25" min="1" max="24" value="8" inputmode="decimal"></label>
+        <label>Dies de feina per setmana<input type="number" id="q-dies" step="1" min="1" max="7" value="5" inputmode="numeric"></label>
+      </div>
+      <p class="nota">Tot el que facis per sobre de la jornada d'un dia compta com a hora extra.</p>
       <div class="fila">
         <label>Preu hora extra (€)<input type="number" id="q-extra" step="0.01" min="0" placeholder="com la normal" inputmode="decimal"></label>
         <label>Preu hora en festiu (€)<input type="number" id="q-festiu" step="0.01" min="0" placeholder="com l'extra" inputmode="decimal"></label>

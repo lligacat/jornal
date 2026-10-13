@@ -89,6 +89,12 @@ button { cursor: pointer; border: 0; border-radius: 12px; padding: 11px 16px; }
 .heroi .generat { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; margin-top: 14px; padding: 10px 12px; border-radius: 14px; background: rgba(255, 255, 255, .12); }
 .heroi .generat + .generat { margin-top: 8px; }
 .heroi .generat.seguent { background: rgba(255, 255, 255, .06); }
+.heroi .generat .peu-extres { margin-top: 4px; opacity: .75; }
+.heroi .generat u { cursor: pointer; white-space: nowrap; }
+.detall { margin: 16px 0; }
+.detall summary { cursor: pointer; font-weight: 600; padding: 10px 0; }
+.detall td:last-child { text-align: left; white-space: normal; }
+.detall th:last-child { text-align: left; }
 .heroi .generat span { flex-basis: 100%; font-size: .8rem; opacity: .8; }
 .heroi .generat b { font-size: 1.25rem; letter-spacing: -.02em; color: var(--accent); }
 .heroi .generat small { font-size: .82rem; opacity: .85; }

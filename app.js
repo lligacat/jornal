@@ -185,10 +185,11 @@ function generatFinsAvui(any, mes) {
 // Hores extres i festives fetes fins avui dins del període que entra a la nòmina d'un mes, i el que valen.
 function extresFinsAvui(any, mes) {
   const clauAvui = clauDia(avui.getFullYear(), avui.getMonth(), avui.getDate());
-  const r = { hores: 0, importe: 0 };
+  const r = { hores: 0, importe: 0, restades: 0 };
   for (const clau of diesPeriode(any, mes)) {
     if (clau > clauAvui) break;
     const cd = diaAjustat(clau), z = importsDia(clau);
+    r.restades += cd.compensades;
     r.hores += cd.extres + cd.festives - cd.festPrev;
     r.importe += z.extres + (estat.config.mode === 'mensual' ? z.festives : cd.festives ? z.festives * (1 - cd.festPrev / cd.festives) : 0);
   }
@@ -492,6 +493,7 @@ function pintaMes() {
       <span>Hores extres i festius fins avui${c.tallDia ? ` · del ${textPeriode(any, mes)}` : ''}</span>
       <b>${euros(extres.importe * r.partNeta)} nets</b>
       <small>${hores(extres.hores)} · ${euros(extres.importe)} bruts</small>
+      <span class="peu-extres">Jornada de ${hores(Math.max(...c.jornada))} al dia: el que passa d'aquí és extra.${extres.restades ? ` S'han restat ${hores(extres.restades)} per dies amb menys hores.` : ''} <u data-va="resum">Veure dia per dia</u></span>
     </div>
     ${seguent && seguent.hores ? `<div class="generat seguent">
       <span>Ja compten per a la nòmina ${deMes((mes + 1) % 12)} · del ${textPeriode(any, mes + 1)}</span>
@@ -658,7 +660,8 @@ function obreQuestionari() {
   if (estat.benvinguda) {
     $('#q-sou').value = c.souBase;
     $('#q-preuhora').value = c.preuHora;
-    $('#q-hores').value = c.jornada.reduce((s, h) => s + h, 0);
+    $('#q-jornada').value = Math.max(...c.jornada) || 8;
+    $('#q-dies').value = c.jornada.filter(h => h > 0).length || 5;
     $('#q-extra').value = c.preuExtra;
     $('#q-festiu').value = c.preuFestiu;
     $('#q-irpf').value = c.irpf;
@@ -836,12 +839,17 @@ function ajustaQuestionari() {
 
 function desaQuestionari() {
   const c = estat.config;
-  const setmana = num($('#q-hores').value) || 40;
+  const horesDia = num($('#q-jornada').value) || 8;
+  const diesSetmana = Math.min(7, Math.max(1, Math.round(num($('#q-dies').value) || 5)));
+  const setmana = horesDia * diesSetmana;
   c.mode = $('#q-mode').value;
   // En refer el qüestionari no es trepitja una jornada o un preu que ja s'havien retocat a mà a Ajustos.
-  const abans = { setmana: c.jornada.reduce((s, h) => s + h, 0), sou: c.souBase, pagues: c.pagues };
+  const abans = { setmana: c.jornada.reduce((s, h) => s + h, 0), sou: c.souBase, pagues: c.pagues, horesDia: Math.max(...c.jornada) };
   const primerCop = !estat.benvinguda;
-  if (primerCop || setmana !== abans.setmana) c.jornada = [0, 1, 1, 1, 1, 1, 0].map(d => d * setmana / 5);
+  // Els primers dies de la setmana, començant per dilluns, són els de feina.
+  if (primerCop || setmana !== abans.setmana || horesDia !== abans.horesDia) {
+    c.jornada = DIES.map((_, d) => (ORDRE_SETMANA.indexOf(d) < diesSetmana ? horesDia : 0));
+  }
   if (c.mode === 'mensual') {
     c.souBase = num($('#q-sou').value);
     c.pagues = $('#q-pagues').value;
@@ -1026,6 +1034,7 @@ function pintaResum() {
       <label>Net cobrat (€)<input type="number" step="0.01" data-nomina="net" value="${nomina.net ?? ''}"></label>
     </div>
     <div id="comparacio"></div>
+    ${detallDies(any, mes)}
     <h2>Cost d'anar a treballar</h2>
     ${r.transport ? `
     <div class="targetes">
@@ -1038,6 +1047,28 @@ function pintaResum() {
     <button class="secundari ample" id="csv">Descarrega el detall del mes (CSV)</button>
     <p class="nota">Càlcul orientatiu fet amb els preus que has posat a Ajustos. El net exacte depèn de com cotitza cada concepte; el que mana és el teu contracte i el conveni.</p>`;
   pintaComparacio();
+}
+
+// Taula amb cada dia treballat del període: hores fetes i com s'han comptat.
+function detallDies(any, mes) {
+  const files = [];
+  for (const clau of diesPeriode(any, mes)) {
+    const dia = estat.dies[clau];
+    if (!dia || dia.tipus !== 'feina') continue;
+    const cd = diaAjustat(clau), d = dataDeClau(clau);
+    if (!cd.total && !cd.falten) continue;
+    const com = [];
+    if (cd.extres) com.push(`${hores(cd.extres)} extres`);
+    if (cd.festives) com.push(`${hores(cd.festives)} a preu de festiu`);
+    if (cd.nocturnes) com.push(`${hores(cd.nocturnes)} de nit`);
+    if (cd.compensades) com.push(`${hores(cd.compensades)} extres restades per compensar un dia curt`);
+    if (cd.falten) com.push(`falten ${hores(cd.falten)} per arribar a la jornada`);
+    files.push(`<tr><td>${DIES[d.getDay()]} ${diaCurt(clau)}</td><td>${hores(cd.total)}</td><td>${com.join(' · ') || 'jornada normal'}</td></tr>`);
+  }
+  if (!files.length) return '';
+  return `<details class="detall"><summary>Veure dia per dia com s'han comptat les hores</summary>
+    <table class="nomina"><thead><tr><th>Dia</th><th>Hores</th><th>Com compta</th></tr></thead><tbody>${files.join('')}</tbody></table>
+    <p class="nota">La jornada de cada dia es canvia a Ajustos → Jornada. Tot el que passa de la jornada és hora extra.</p></details>`;
 }
 
 function pintaComparacio() {
