@@ -477,13 +477,27 @@ function pintaMes() {
   const extres = extresFinsAvui(any, mes);
   // Amb dia de tall, el que es fa després del tall ja és de la nòmina del mes següent.
   const seguent = c.tallDia ? extresFinsAvui(any, mes + 1) : null;
+  const esActual = any === avui.getFullYear() && mes === avui.getMonth();
+  const esPassat = any < avui.getFullYear() || (any === avui.getFullYear() && mes < avui.getMonth());
+  const horesFestiu = c.mode === 'mensual' ? r.festives - r.festPrev : r.festives;
+  const cobrat = textCobrat(r, estat.nomines[clauMes(any, mes)] || {});
   const cobra = dataCobrament(any, mes);
   const falten = cobra && Math.round((cobra - new Date(avui.getFullYear(), avui.getMonth(), avui.getDate())) / 86400000);
   $('#heroi').innerHTML = `
-    <span class="etiqueta">Net previst ${deMes(mes)}</span>
+    <span class="etiqueta">${esActual ? 'Net previst' : esPassat ? 'Resum' : 'Previsió'} ${deMes(mes)}${esActual ? '' : ` de ${any} · net`}</span>
     <b class="xifra">${euros(r.net)}</b>
     <span class="sota">${euros(r.brut)} bruts${r.horesExtraLegals ? ` · ${hores(r.horesExtraLegals)} extres i festives` : ''}</span>
-    ${any === avui.getFullYear() && mes === avui.getMonth() ? `
+    <div class="hores-fila">
+      <div><b>${hores(r.treballades - r.extres - horesFestiu)}</b><span>normals</span></div>
+      <div><b>${hores(r.extres)}</b><span>extres</span></div>
+      <div><b>${hores(horesFestiu)}</b><span>en festiu</span></div>
+      <div><b>${hores(r.treballades)}</b><span>total</span></div>
+    </div>
+    ${esPassat || cobrat ? `<div class="generat" data-va="resum">
+      <span>Has cobrat bé?</span>
+      ${cobrat ? `<b class="${cobrat.be ? '' : 'alerta'}">${cobrat.text}</b>` : '<b>Comprova-ho ›</b><small>Posa el que has cobrat i ho comparem</small>'}
+    </div>` : ''}
+    ${esActual ? `
     <div class="generat">
       <span>Portes generat fins avui</span>
       <b>${euros(generat * r.partNeta)} nets</b>
@@ -500,13 +514,24 @@ function pintaMes() {
       <b>${euros(seguent.importe * r.partNeta)} nets</b>
       <small>${hores(seguent.hores)} · ${euros(seguent.importe)} bruts</small>
     </div>` : ''}` : ''}
-    <div class="peu"><span>${hores(r.treballades)} treballades</span><button data-va="resum">Veure el detall ›</button></div>
+    <div class="peu"><span>${r.diesTreballats} dies treballats</span><button data-va="resum">Veure el detall ›</button></div>
     ${c.tallDia || cobra ? `<div class="apunts">
       ${c.tallDia ? `<span>Compta del ${textPeriode(any, mes)}</span>` : ''}
       ${cobra ? `<span>${falten > 0 ? `Cobres el ${diaCurt(clauDia(cobra.getFullYear(), cobra.getMonth(), cobra.getDate()))} · ${falten === 1 ? 'falta 1 dia' : `falten ${falten} dies`}` : falten === 0 ? 'Avui cobres' : `Cobrat el ${diaCurt(clauDia(cobra.getFullYear(), cobra.getMonth(), cobra.getDate()))}`}</span>` : ''}
     </div>` : ''}`;
   pintaDesglos(r);
   pintaCalendari();
+}
+
+// Compara el que s'ha cobrat de veritat (apuntat a Nòmina) amb el que tocava.
+function textCobrat(r, cobrat) {
+  const camp = cobrat.net != null ? 'net' : cobrat.brut != null ? 'brut' : null;
+  if (!camp) return null;
+  const dif = cobrat[camp] - r[camp];
+  if (Math.abs(dif) < 1) return { be: true, text: `Sí: el ${camp} quadra (${euros(cobrat[camp])})` };
+  return dif < 0
+    ? { be: false, text: `Has cobrat ${euros(-dif)} menys del que tocava` }
+    : { be: true, text: `Has cobrat ${euros(dif)} més del previst` };
 }
 
 function pintaCalendari() {
@@ -1030,7 +1055,8 @@ function pintaResum() {
         <tr class="total"><td colspan="3">Net aproximat</td><td>${euros(r.net)}</td></tr>
       </tfoot>
     </table>
-    <h2>Què diu la nòmina</h2>
+    <h2>Has cobrat bé?</h2>
+    <p class="nota">Posa el brut i el net que surten a la teva nòmina ${deMes(mes)} i els comparem amb el que tocava segons les hores apuntades.</p>
     <div class="fila">
       <label>Brut cobrat (€)<input type="number" step="0.01" data-nomina="brut" value="${nomina.brut ?? ''}"></label>
       <label>Net cobrat (€)<input type="number" step="0.01" data-nomina="net" value="${nomina.net ?? ''}"></label>

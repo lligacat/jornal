@@ -95,6 +95,12 @@ button { cursor: pointer; border: 0; border-radius: 12px; padding: 11px 16px; }
 .detall summary { cursor: pointer; font-weight: 600; padding: 10px 0; }
 .detall td:last-child { text-align: left; white-space: normal; }
 .detall th:last-child { text-align: left; }
+.hores-fila { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 14px; }
+.hores-fila div { background: rgba(255, 255, 255, .12); border-radius: 12px; padding: 8px 4px; text-align: center; }
+.hores-fila b { display: block; font-size: 1rem; letter-spacing: -.02em; white-space: nowrap; }
+.hores-fila span { font-size: .72rem; opacity: .8; }
+.heroi .generat[data-va] { cursor: pointer; }
+.heroi .generat b.alerta { color: #ffb4a8; }
 .heroi .generat span { flex-basis: 100%; font-size: .8rem; opacity: .8; }
 .heroi .generat b { font-size: 1.25rem; letter-spacing: -.02em; color: var(--accent); }
 .heroi .generat small { font-size: .82rem; opacity: .85; }
