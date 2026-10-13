@@ -182,6 +182,19 @@ function generatFinsAvui(any, mes) {
   return (calculaMes(any, mes).brut - variable) * part + fet;
 }
 
+// Hores extres i festives fetes fins avui dins del període que entra a la nòmina d'un mes, i el que valen.
+function extresFinsAvui(any, mes) {
+  const clauAvui = clauDia(avui.getFullYear(), avui.getMonth(), avui.getDate());
+  const r = { hores: 0, importe: 0 };
+  for (const clau of diesPeriode(any, mes)) {
+    if (clau > clauAvui) break;
+    const cd = diaAjustat(clau), z = importsDia(clau);
+    r.hores += cd.extres + cd.festives - cd.festPrev;
+    r.importe += z.extres + (estat.config.mode === 'mensual' ? z.festives : cd.festives ? z.festives * (1 - cd.festPrev / cd.festives) : 0);
+  }
+  return r;
+}
+
 function dataCobrament(any, mes) {
   const c = estat.config;
   if (!c.diaCobrament) return null;
@@ -460,6 +473,9 @@ function pintaMes() {
     return;
   }
   const generat = generatFinsAvui(any, mes);
+  const extres = extresFinsAvui(any, mes);
+  // Amb dia de tall, el que es fa després del tall ja és de la nòmina del mes següent.
+  const seguent = c.tallDia ? extresFinsAvui(any, mes + 1) : null;
   const cobra = dataCobrament(any, mes);
   const falten = cobra && Math.round((cobra - new Date(avui.getFullYear(), avui.getMonth(), avui.getDate())) / 86400000);
   $('#heroi').innerHTML = `
@@ -471,7 +487,17 @@ function pintaMes() {
       <span>Portes generat fins avui</span>
       <b>${euros(generat * r.partNeta)} nets</b>
       <small>${euros(generat)} bruts</small>
-    </div>` : ''}
+    </div>
+    <div class="generat">
+      <span>Hores extres i festius fins avui${c.tallDia ? ` · del ${textPeriode(any, mes)}` : ''}</span>
+      <b>${euros(extres.importe * r.partNeta)} nets</b>
+      <small>${hores(extres.hores)} · ${euros(extres.importe)} bruts</small>
+    </div>
+    ${seguent && seguent.hores ? `<div class="generat seguent">
+      <span>Ja compten per a la nòmina ${deMes((mes + 1) % 12)} · del ${textPeriode(any, mes + 1)}</span>
+      <b>${euros(seguent.importe * r.partNeta)} nets</b>
+      <small>${hores(seguent.hores)} · ${euros(seguent.importe)} bruts</small>
+    </div>` : ''}` : ''}
     <div class="peu"><span>${hores(r.treballades)} treballades</span><button data-va="resum">Veure el detall ›</button></div>
     ${c.tallDia || cobra ? `<div class="apunts">
       ${c.tallDia ? `<span>Compta del ${textPeriode(any, mes)}</span>` : ''}
@@ -637,6 +663,7 @@ function obreQuestionari() {
     $('#q-festiu').value = c.preuFestiu;
     $('#q-irpf').value = c.irpf;
     $('#q-nit').value = c.plusNocturn;
+    $('#q-tall').value = c.tallDia;
     $('#q-km').value = c.transKm;
     $('#q-abonament').value = c.transAbonament;
   }
@@ -831,6 +858,7 @@ function desaQuestionari() {
   c.irpf = num($('#q-irpf').value);
   c.plusNocturn = num($('#q-nit').value);
   c.dataInici = $('#q-inici').value;
+  c.tallDia = Math.min(31, Math.max(0, Math.round(num($('#q-tall').value))));
   c.transKm = num($('#q-km').value);
   c.transAbonament = num($('#q-abonament').value);
   aplicaNominaLlegida();

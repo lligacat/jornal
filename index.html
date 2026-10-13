@@ -123,10 +123,10 @@
               </select>
             </label>
           </div>
-          <label>Últim dia que entra a la nòmina del mes
+          <label>Fins a quin dia del mes et compten les hores extres
             <input type="number" step="1" min="0" max="31" data-cfg="tallDia">
           </label>
-          <p class="nota">Si l'empresa tanca les hores abans de final de mes, posa aquí el dia de tall. Amb un 20, la nòmina d'octubre compta les hores extres, festius i plusos del 21 de setembre al 20 d'octubre. Deixa un 0 si es compta el mes sencer, de l'1 a l'últim dia.</p>
+          <p class="nota">Si te les compten de dia 20 a dia 20 i te les paguen amb la nòmina, posa un 20: la nòmina d'octubre portarà el sou del mes i les hores extres, festius i plusos del 21 de setembre al 20 d'octubre. Deixa un 0 si es compta el mes sencer, de l'1 a l'últim dia.</p>
         </fieldset>
 
         <fieldset>
@@ -344,6 +344,9 @@
       </label>
       <label>Retenció d'IRPF de la teva nòmina (%)
         <input type="number" id="q-irpf" step="0.01" min="0" max="60" value="12" inputmode="decimal">
+      </label>
+      <label>Fins a quin dia del mes et compten les hores extres? (0 = fins a l'últim dia)
+        <input type="number" id="q-tall" step="1" min="0" max="31" value="0" inputmode="numeric">
       </label>
       <label>Quan vas començar a l'empresa?
         <input type="date" id="q-inici">

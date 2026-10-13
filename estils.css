@@ -87,6 +87,8 @@ button { cursor: pointer; border: 0; border-radius: 12px; padding: 11px 16px; }
 .heroi .xifra.petita { font-size: 1.35rem; margin: 4px 0; }
 .heroi .sota { font-size: .88rem; opacity: .85; }
 .heroi .generat { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; margin-top: 14px; padding: 10px 12px; border-radius: 14px; background: rgba(255, 255, 255, .12); }
+.heroi .generat + .generat { margin-top: 8px; }
+.heroi .generat.seguent { background: rgba(255, 255, 255, .06); }
 .heroi .generat span { flex-basis: 100%; font-size: .8rem; opacity: .8; }
 .heroi .generat b { font-size: 1.25rem; letter-spacing: -.02em; color: var(--accent); }
 .heroi .generat small { font-size: .82rem; opacity: .85; }
